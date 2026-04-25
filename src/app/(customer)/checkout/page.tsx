@@ -70,18 +70,27 @@ export default function CheckoutPage() {
   const handleCheckout = (formData: FormData) => {
     startTransition(async () => {
       try {
-        const result = await createOrder(items, getTotalPrice())
+        // Clear cart locally before redirection since createOrder will redirect on server
+        const currentItems = [...items]
+        const currentTotal = getTotalPrice()
+        
+        const result = await createOrder(currentItems, currentTotal)
         
         if (result?.error) {
           toast.error('Lỗi đặt hàng', { description: result.error })
           return
         }
 
-        toast.success('Đặt hàng thành công!', {
-          description: 'Cảm ơn bạn đã tin tưởng BookShop. Đơn hàng của bạn đang được xử lý.'
-        })
+        // The clearCart() here might not be reached if redirect happens inside createOrder
+        // but createOrder uses redirect() which throws a special error that Next.js catches.
+        // If createOrder is successful, the page will redirect.
         clearCart()
-      } catch (error) {
+      } catch (error: any) {
+        // Next.js redirect() throws an error, we should not toast if it's a redirect
+        if (error.message === 'NEXT_REDIRECT') {
+          clearCart()
+          throw error
+        }
         toast.error('Đã xảy ra lỗi không xác định')
       }
     })

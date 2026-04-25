@@ -26,7 +26,9 @@ export default async function BooksPage({
   const categories: Category[] = categoriesData || []
 
   // Fetch books based on query
-  let dbQuery = supabase.from('books').select('*, categories!inner(slug)')
+  let dbQuery = supabase
+    .from('books')
+    .select('*, categories!inner(slug)')
 
   if (q) {
     // Truy vấn trên cả cột có dấu và cột không dấu đã tạo ở Bước 1
