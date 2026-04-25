@@ -138,14 +138,9 @@ export default function LoginPage({
               </div>
 
               <div className="space-y-2">
-                <div className="flex items-center justify-between px-1">
-                  <Label htmlFor="password" className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
-                    <Lock className="h-3 w-3" /> Mật khẩu
-                  </Label>
-                  <Link href="/forgot-password" className="text-xs font-bold text-primary hover:underline">
-                    Quên mật khẩu?
-                  </Link>
-                </div>
+                <Label htmlFor="password" className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-1.5 px-1">
+                  <Lock className="h-3 w-3" /> Mật khẩu
+                </Label>
                 <div className="relative group">
                   <Input 
                     id="password" 

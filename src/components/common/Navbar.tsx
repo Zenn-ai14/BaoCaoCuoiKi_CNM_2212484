@@ -17,37 +17,37 @@ import Image from 'next/image'
 
 interface NavbarProps {
   user: User | null
+  initialWishlistCount?: number
 }
 
-export function Navbar({ user }: NavbarProps) {
+export function Navbar({ user, initialWishlistCount = 0 }: NavbarProps) {
   const [mounted, setMounted] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [suggestions, setSuggestions] = useState<Book[]>([])
   const [isSearching, setIsSearching] = useState(false)
   const [showSuggestions, setShowSuggestions] = useState(false)
-  const [wishlistCount, setWishlistCount] = useState(0)
-  
+  const [wishlistCount, setWishlistCount] = useState(initialWishlistCount)
+
   const router = useRouter()
   const searchParams = useSearchParams()
   const getTotalItems = useCartStore((state) => state.getTotalItems)
 
   useEffect(() => {
+    setWishlistCount(initialWishlistCount)
+  }, [initialWishlistCount])
+
+  useEffect(() => {
     setMounted(true)
     setSearchQuery(searchParams.get('q') || '')
-    
+
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 10)
     }
 
-    if (user) {
-      getWishlistCount().then(setWishlistCount)
-    }
-    
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
-  }, [searchParams, user])
-
+  }, [searchParams])
   // Logic xử lý gợi ý khi gõ (Debounce)
   useEffect(() => {
     const timer = setTimeout(async () => {

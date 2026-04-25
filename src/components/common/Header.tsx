@@ -10,13 +10,24 @@ export async function Header() {
   } = await supabase.auth.getUser()
 
   let user: User | null = null
+  let wishlistCount = 0
 
   if (authUser) {
-    const { data: userData } = await supabase
-      .from('users')
-      .select('*')
-      .eq('id', authUser.id)
-      .single()
+    // Fetch user details and wishlist count in parallel for performance
+    const [userResponse, wishlistResponse] = await Promise.all([
+      supabase
+        .from('users')
+        .select('*')
+        .eq('id', authUser.id)
+        .single(),
+      supabase
+        .from('wishlist')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', authUser.id)
+    ])
+
+    const { data: userData } = userResponse
+    const { count } = wishlistResponse
 
     if (userData) {
       user = {
@@ -27,11 +38,13 @@ export async function Header() {
         role: userData.role,
       }
     }
+    
+    wishlistCount = count || 0
   }
 
   return (
     <header className="sticky top-0 z-50 w-full">
-      <Navbar user={user} />
+      <Navbar user={user} initialWishlistCount={wishlistCount} />
     </header>
   )
 }

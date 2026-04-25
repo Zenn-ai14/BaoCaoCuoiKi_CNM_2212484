@@ -2,6 +2,23 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { cache } from 'react'
+
+export const getWishlistCount = cache(async () => {
+  const supabase = await createClient()
+  
+  // Use getSession for faster check in non-critical paths
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session?.user) return 0
+
+  const { count, error } = await supabase
+    .from('wishlist')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', session.user.id)
+
+  if (error) return 0
+  return count || 0
+})
 
 export async function toggleWishlist(bookId: string) {
   const supabase = await createClient()
@@ -91,19 +108,3 @@ export async function getWishlistIds() {
   if (error) return []
   return data.map(item => item.book_id)
 }
-
-export async function getWishlistCount() {
-  const supabase = await createClient()
-  
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return 0
-
-  const { count, error } = await supabase
-    .from('wishlist')
-    .select('*', { count: 'exact', head: true })
-    .eq('user_id', user.id)
-
-  if (error) return 0
-  return count || 0
-}
-
