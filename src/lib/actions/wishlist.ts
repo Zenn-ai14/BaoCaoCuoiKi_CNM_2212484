@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { cache } from 'react'
+import { Book } from '@/types'
 
 export const getWishlistCount = cache(async () => {
   const supabase = await createClient()
@@ -66,7 +67,7 @@ export async function toggleWishlist(bookId: string) {
   }
 }
 
-export async function getWishlist() {
+export async function getWishlist(): Promise<Book[]> {
   const supabase = await createClient()
   
   const { data: { user } } = await supabase.auth.getUser()
@@ -89,9 +90,9 @@ export async function getWishlist() {
   if (!data) return []
 
   // Lọc bỏ các trường hợp sách bị null (do đã bị xóa khỏi DB)
-  return data
+  return (data as any[])
     .filter(item => item.books !== null)
-    .map(item => item.books)
+    .map(item => item.books as Book)
 }
 
 export async function getWishlistIds() {
