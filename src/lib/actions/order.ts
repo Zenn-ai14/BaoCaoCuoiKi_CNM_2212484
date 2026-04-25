@@ -59,20 +59,6 @@ export async function createOrder(cartItems: CartItem[], totalAmount: number) {
     return { error: 'Không thể lưu chi tiết đơn hàng. Vui lòng thử lại.' }
   }
 
-  // Update book stock quantities (optional but recommended)
-  // For simplicity in this capstone, we might skip complex stock management
-  // or do it via a Postgres trigger. Let's do a simple update for now.
-  for (const item of cartItems) {
-    // Get current stock
-    const { data: book } = await supabase.from('books').select('stock_quantity').eq('id', item.id).single()
-    if (book && book.stock_quantity >= item.quantity) {
-      await supabase
-        .from('books')
-        .update({ stock_quantity: book.stock_quantity - item.quantity })
-        .eq('id', item.id)
-    }
-  }
-
   // 4. Revalidate and redirect
   revalidatePath('/orders')
   redirect(`/orders?success=true&orderId=${order.id}`)

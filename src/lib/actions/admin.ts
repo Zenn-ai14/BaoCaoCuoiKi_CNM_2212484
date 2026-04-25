@@ -165,14 +165,65 @@ export async function updateOrderStatus(id: string, formData: FormData) {
 
   const supabase = await createClient()
 
-  const { error } = await supabase
+  // 1. Lấy trạng thái hiện tại và danh sách sản phẩm trong đơn hàng
+  const { data: order, error: fetchError } = await supabase
+    .from('orders')
+    .select('status, order_items(book_id, quantity)')
+    .eq('id', id)
+    .single()
+
+  if (fetchError || !order) throw new Error('Không tìm thấy đơn hàng')
+
+  const previousStatus = order.status
+
+  // 2. Cập nhật trạng thái đơn hàng
+  const { error: updateError } = await supabase
     .from('orders')
     .update({ status })
     .eq('id', id)
 
-  if (error) throw new Error(error.message)
+  if (updateError) throw new Error(updateError.message)
+
+  // 3. Xử lý tồn kho
+  // Nếu chuyển sang "đã giao" từ trạng thái khác
+  if (status === 'delivered' && previousStatus !== 'delivered') {
+    for (const item of (order.order_items as any[])) {
+      const { data: book } = await supabase
+        .from('books')
+        .select('stock_quantity')
+        .eq('id', item.book_id)
+        .single()
+
+      if (book) {
+        await supabase
+          .from('books')
+          .update({ stock_quantity: Math.max(0, book.stock_quantity - item.quantity) })
+          .eq('id', item.book_id)
+      }
+    }
+  }
+  // Nếu chuyển từ "đã giao" sang trạng thái khác (ví dụ: bị hủy hoặc hoàn trả)
+  else if (previousStatus === 'delivered' && status !== 'delivered') {
+    for (const item of (order.order_items as any[])) {
+      const { data: book } = await supabase
+        .from('books')
+        .select('stock_quantity')
+        .eq('id', item.book_id)
+        .single()
+
+      if (book) {
+        await supabase
+          .from('books')
+          .update({ stock_quantity: book.stock_quantity + item.quantity })
+          .eq('id', item.book_id)
+      }
+    }
+  }
 
   revalidatePath('/admin/orders')
+  revalidatePath('/admin/books')
+  revalidatePath('/books')
+  revalidatePath('/')
   redirect('/admin/orders')
 }
 
