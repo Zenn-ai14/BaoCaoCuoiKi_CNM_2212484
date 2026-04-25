@@ -142,7 +142,7 @@ export default function LoginPage({
                   <Label htmlFor="password" className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
                     <Lock className="h-3 w-3" /> Mật khẩu
                   </Label>
-                  <Link href="/forgot-password" size="sm" className="text-xs font-bold text-primary hover:underline">
+                  <Link href="/forgot-password" className="text-xs font-bold text-primary hover:underline">
                     Quên mật khẩu?
                   </Link>
                 </div>
