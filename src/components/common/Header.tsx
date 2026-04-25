@@ -30,7 +30,7 @@ export async function Header() {
   }
 
   return (
-    <header className="bg-background">
+    <header className="sticky top-0 z-50 w-full">
       <Navbar user={user} />
     </header>
   )

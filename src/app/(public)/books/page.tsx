@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Search, FilterX, BookOpen } from 'lucide-react'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
+import { getWishlistIds } from '@/lib/actions/wishlist'
 
 export const revalidate = 60 // Revalidate every minute
 
@@ -17,6 +18,9 @@ export default async function BooksPage({
   const { q, category } = await searchParams
   const supabase = await createClient()
 
+  // Fetch wishlist IDs for the current user
+  const wishlistIds = await getWishlistIds()
+
   // Fetch categories for sidebar
   const { data: categoriesData } = await supabase.from('categories').select('*').order('name')
   const categories: Category[] = categoriesData || []
@@ -25,7 +29,8 @@ export default async function BooksPage({
   let dbQuery = supabase.from('books').select('*, categories!inner(slug)')
 
   if (q) {
-    dbQuery = dbQuery.ilike('title', `%${q}%`)
+    // Truy vấn trên cả cột có dấu và cột không dấu đã tạo ở Bước 1
+    dbQuery = dbQuery.or(`title.ilike.%${q}%,author.ilike.%${q}%,search_title_unaccented.ilike.%${q}%,search_author_unaccented.ilike.%${q}%`)
   }
   
   if (category) {
@@ -45,9 +50,10 @@ export default async function BooksPage({
             <h2 className="font-bold text-lg mb-4">Tìm kiếm</h2>
             <form action="/books" method="GET" className="flex gap-2">
               <Input 
+                key={q || "search-input"}
                 type="text" 
                 name="q" 
-                defaultValue={q} 
+                defaultValue={q || ""} 
                 placeholder="Tên sách..." 
                 className="w-full"
               />
@@ -110,7 +116,11 @@ export default async function BooksPage({
           ) : books.length > 0 ? (
             <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
               {books.map((book) => (
-                <BookCard key={book.id} book={book} />
+                <BookCard 
+                  key={book.id} 
+                  book={book} 
+                  isWishlistedInitial={wishlistIds.includes(book.id)} 
+                />
               ))}
             </div>
           ) : (

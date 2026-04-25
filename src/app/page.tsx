@@ -4,11 +4,20 @@ import { BookCard } from '@/components/books/BookCard'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { ArrowRight, BookOpen } from 'lucide-react'
+import { HeroCarousel } from '@/components/common/HeroCarousel'
+import { getLatestBooks } from '@/lib/actions/book'
+import { getWishlistIds } from '@/lib/actions/wishlist'
 
 export const revalidate = 3600 // Revalidate the page every hour
 
 export default async function Home() {
   const supabase = await createClient()
+
+  // Fetch wishlist IDs for the current user
+  const wishlistIds = await getWishlistIds()
+
+  // Fetch latest books for Carousel (limit 5)
+  const carouselBooks = await getLatestBooks()
 
   // Fetch latest books
   const { data: latestBooks, error } = await supabase
@@ -22,38 +31,8 @@ export default async function Home() {
   return (
     <div className="flex flex-col min-h-screen">
       {/* Hero Section */}
-      <section className="relative bg-muted/50 py-20 md:py-32">
-        <div className="container mx-auto px-4 text-center md:text-left flex flex-col md:flex-row items-center gap-12">
-          <div className="flex-1 space-y-6">
-            <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight">
-              Khám phá thế giới tri thức cùng <span className="text-primary">BookShop</span>
-            </h1>
-            <p className="text-xl text-muted-foreground max-w-2xl">
-              Nền tảng mua sắm sách trực tuyến hàng đầu với hàng ngàn tựa sách đa dạng, phong phú. 
-              Giao hàng nhanh chóng, thanh toán an toàn.
-            </p>
-            <div className="flex flex-wrap items-center justify-center md:justify-start gap-4">
-              <Button asChild size="lg" className="h-12 px-8 text-lg">
-                <Link href="/books">
-                  Xem ngay <ArrowRight className="ml-2 h-5 w-5" />
-                </Link>
-              </Button>
-              <Button asChild variant="outline" size="lg" className="h-12 px-8 text-lg">
-                <Link href="/register">
-                  Đăng ký thành viên
-                </Link>
-              </Button>
-            </div>
-          </div>
-          <div className="flex-1 hidden md:flex justify-center">
-            <div className="relative w-72 h-96 bg-primary/10 rounded-xl flex items-center justify-center rotate-3 transform transition-transform hover:rotate-6">
-              <BookOpen className="w-32 h-32 text-primary/50" />
-              {/* Decorative elements */}
-              <div className="absolute -top-4 -left-4 w-24 h-24 bg-primary/20 rounded-full blur-xl"></div>
-              <div className="absolute -bottom-8 -right-8 w-32 h-32 bg-primary/30 rounded-full blur-2xl"></div>
-            </div>
-          </div>
-        </div>
+      <section className="py-8 md:py-12 container mx-auto px-4">
+        {carouselBooks.length > 0 && <HeroCarousel books={carouselBooks} />}
       </section>
 
       {/* Latest Books Section */}
@@ -77,7 +56,11 @@ export default async function Home() {
         ) : books.length > 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {books.map((book) => (
-              <BookCard key={book.id} book={book} />
+              <BookCard 
+                key={book.id} 
+                book={book} 
+                isWishlistedInitial={wishlistIds.includes(book.id)}
+              />
             ))}
           </div>
         ) : (

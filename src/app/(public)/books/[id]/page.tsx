@@ -6,10 +6,16 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import ReviewForm from './ReviewForm'
 import AddToCartButton from './AddToCartButton'
+import WishlistButton from './WishlistButton'
+import { getWishlistIds } from '@/lib/actions/wishlist'
 
 export default async function BookDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const supabase = await createClient()
+
+  // Fetch wishlist IDs to check if current book is wishlisted
+  const wishlistIds = await getWishlistIds()
+  const isWishlisted = wishlistIds.includes(id)
 
   // Lấy chi tiết sách
   const { data: book, error } = await supabase
@@ -104,8 +110,9 @@ export default async function BookDetailPage({ params }: { params: Promise<{ id:
             </span>
           </div>
 
-          <div className="flex gap-4">
+          <div className="flex flex-wrap gap-4">
             <AddToCartButton book={book as any} />
+            <WishlistButton bookId={book.id} isWishlistedInitial={isWishlisted} />
           </div>
         </div>
       </div>
