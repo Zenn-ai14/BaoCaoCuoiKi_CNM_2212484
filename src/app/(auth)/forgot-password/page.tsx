@@ -1,39 +1,28 @@
 'use client'
 
-import { use, useState, useTransition } from 'react'
-import { login } from '@/lib/actions/auth'
+import { use, useTransition } from 'react'
+import { forgotPassword } from '@/lib/actions/auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import { toast } from 'sonner'
 
-export default function LoginPage({
+export default function ForgotPasswordPage({
   searchParams,
 }: {
-  searchParams: Promise<{ message?: string; next?: string }>
+  searchParams: Promise<{ message?: string; success?: string }>
 }) {
   const params = use(searchParams)
   const message = params.message
-  const next = params.next || '/'
-  const router = useRouter()
+  const success = params.success
   const [isPending, startTransition] = useTransition()
-  
+
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const formData = new FormData(e.currentTarget)
     startTransition(async () => {
-      try {
-        await login(formData)
-      } catch (error: any) {
-        if (error.message === 'NEXT_REDIRECT') {
-          throw error
-        }
-        console.error('Login error:', error)
-        toast.error('Đã xảy ra lỗi. Vui lòng kiểm tra console.')
-      }
+      await forgotPassword(formData)
     })
   }
 
@@ -41,15 +30,13 @@ export default function LoginPage({
     <div className="flex h-screen w-full items-center justify-center px-4 bg-muted/40">
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle className="text-2xl">Đăng nhập</CardTitle>
+          <CardTitle className="text-2xl">Quên mật khẩu</CardTitle>
           <CardDescription>
-            Nhập email và mật khẩu của bạn để truy cập tài khoản.
+            Nhập email của bạn để nhận liên kết đặt lại mật khẩu.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form className="grid gap-4" onSubmit={handleSubmit}>
-            <input type="hidden" name="next" value={next} />
-            
             <div className="grid gap-2">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -60,28 +47,19 @@ export default function LoginPage({
                 required
               />
             </div>
-            <div className="grid gap-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password">Mật khẩu</Label>
-                <Link href="/forgot-password" className="text-sm underline text-muted-foreground hover:text-foreground">
-                  Quên mật khẩu?
-                </Link>
-              </div>
-              <Input id="password" name="password" type="password" required />
-            </div>
             
             {message && <div className="text-sm text-red-500">{message}</div>}
+            {success && <div className="text-sm text-green-500">{success}</div>}
 
             <Button type="submit" className="w-full" disabled={isPending}>
-              {isPending ? 'Đang xử lý...' : 'Đăng nhập'}
+              {isPending ? 'Đang gửi...' : 'Gửi liên kết'}
             </Button>
           </form>
         </CardContent>
         <CardFooter className="flex-col gap-2">
           <div className="text-center text-sm">
-            Chưa có tài khoản?{' '}
-            <Link href={`/register${next !== '/' ? `?next=${next}` : ''}`} className="underline">
-              Đăng ký
+            <Link href="/login" className="underline">
+              Quay lại đăng nhập
             </Link>
           </div>
         </CardFooter>

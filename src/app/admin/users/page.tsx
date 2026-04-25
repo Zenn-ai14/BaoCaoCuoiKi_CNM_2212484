@@ -4,6 +4,8 @@ import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Edit, Trash2 } from 'lucide-react'
+import Link from 'next/link'
+import { deleteUser } from '@/lib/actions/admin'
 
 export const revalidate = 0
 
@@ -80,17 +82,22 @@ export default async function AdminUsersPage() {
                         <td className="px-4 py-3 text-muted-foreground">{formatDate(user.created_at)}</td>
                         <td className="px-4 py-3 text-right">
                           <div className="flex items-center justify-end gap-2">
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                              disabled={user.role === 'admin'} // Không cho xóa admin khác trên UI
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
+                            <Link href={`/admin/users/${user.id}`}>
+                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                            </Link>
+                            <form action={deleteUser.bind(null, user.id)}>
+                              <Button 
+                                type="submit"
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                disabled={user.role === 'admin'}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </form>
                           </div>
                         </td>
                       </tr>

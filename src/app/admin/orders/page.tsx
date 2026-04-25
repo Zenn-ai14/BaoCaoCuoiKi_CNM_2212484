@@ -3,6 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Eye, Edit } from 'lucide-react'
+import Link from 'next/link'
+import { deleteOrder } from '@/lib/actions/admin'
+import { DeleteButton } from '@/components/admin/DeleteButton'
 
 export const revalidate = 0
 
@@ -23,8 +26,7 @@ export default async function AdminOrdersPage() {
     .select(`
       *,
       users (
-        full_name,
-        email
+        full_name
       )
     `)
     .order('created_at', { ascending: false })
@@ -74,7 +76,6 @@ export default async function AdminOrdersPage() {
                         <td className="px-4 py-3 font-mono text-xs">{order.id.split('-')[0]}</td>
                         <td className="px-4 py-3">
                           <div className="font-medium">{(order as any).users?.full_name || 'Khách Vô Danh'}</div>
-                          <div className="text-xs text-muted-foreground">{(order as any).users?.email}</div>
                         </td>
                         <td className="px-4 py-3 text-muted-foreground">{formatDate(order.created_at)}</td>
                         <td className="px-4 py-3 font-bold text-primary">{formatPrice(order.total_amount)}</td>
@@ -85,12 +86,12 @@ export default async function AdminOrdersPage() {
                         </td>
                         <td className="px-4 py-3 text-right">
                           <div className="flex items-center justify-end gap-2">
-                            <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-500 hover:text-blue-600 hover:bg-blue-500/10">
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
-                              <Edit className="h-4 w-4" />
-                            </Button>
+                            <Link href={`/admin/orders/${order.id}`}>
+                              <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-500 hover:text-blue-600 hover:bg-blue-500/10">
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                            </Link>
+                            <DeleteButton action={deleteOrder.bind(null, order.id)} />
                           </div>
                         </td>
                       </tr>

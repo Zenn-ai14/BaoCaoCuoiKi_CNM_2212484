@@ -1,16 +1,39 @@
+'use client'
+
+import { use, useState, useTransition } from 'react'
 import { signup } from '@/lib/actions/auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 
-export default async function RegisterPage({
+export default function RegisterPage({
   searchParams,
 }: {
   searchParams: Promise<{ message?: string; next?: string }>
 }) {
-  const { message, next } = await searchParams
+  const params = use(searchParams)
+  const message = params.message
+  const next = params.next || '/'
+  const [isPending, startTransition] = useTransition()
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    const formData = new FormData(e.currentTarget)
+    startTransition(async () => {
+      try {
+        await signup(formData)
+      } catch (error: any) {
+        if (error.message === 'NEXT_REDIRECT') {
+          throw error
+        }
+        console.error('Signup error:', error)
+        alert('Đã xảy ra lỗi. Vui lòng kiểm tra console.')
+      }
+    })
+  }
 
   return (
     <div className="flex h-screen w-full items-center justify-center px-4 bg-muted/40">
@@ -22,8 +45,8 @@ export default async function RegisterPage({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form className="grid gap-4" action={signup}>
-            <input type="hidden" name="next" value={next || '/'} />
+          <form className="grid gap-4" onSubmit={handleSubmit}>
+            <input type="hidden" name="next" value={next} />
             
             <div className="grid gap-2">
               <Label htmlFor="fullName">Họ và tên</Label>
@@ -55,15 +78,15 @@ export default async function RegisterPage({
             
             {message && <div className="text-sm text-red-500">{message}</div>}
 
-            <Button type="submit" className="w-full">
-              Tạo tài khoản
+            <Button type="submit" className="w-full" disabled={isPending}>
+              {isPending ? 'Đang xử lý...' : 'Tạo tài khoản'}
             </Button>
           </form>
         </CardContent>
         <CardFooter className="flex-col gap-2">
           <div className="text-center text-sm">
             Đã có tài khoản?{' '}
-            <Link href={`/login${next ? `?next=${next}` : ''}`} className="underline">
+            <Link href={`/login${next !== '/' ? `?next=${next}` : ''}`} className="underline">
               Đăng nhập
             </Link>
           </div>
